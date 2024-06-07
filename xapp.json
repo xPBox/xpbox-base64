@@ -1,10 +1,10 @@
 {
-  "name": "xPBox星盒App示例",
-  "packageId": "org.xpbox.example",
+  "name": "xPBox-Base64加解密",
+  "packageId": "org.xpbox.base-coder",
   "entry": "./dist/index.html",
   "defaultSize": [4, 4],
   "resizable": {
-    "min": [2, 2],
+    "min": [2, 3],
     "max": [8, 8]
   }
 }

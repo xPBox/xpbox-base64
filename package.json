@@ -1,5 +1,5 @@
 {
-  "name": "xpbox-svelte-vite",
+  "name": "xpbox-base64",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -20,6 +20,7 @@
     "vite-plugin-singlefile": "^2.0.1"
   },
   "dependencies": {
-    "@xpbox/sdk": "^0.0.1"
+    "@xpbox/sdk": "^0.0.1",
+    "js-base64": "^3.7.7"
   }
 }

@@ -1,94 +1,119 @@
 <script lang="ts">
   import { Runtime } from '@xpbox/sdk'
   import { onMount } from 'svelte'
+  import { Base64 } from 'js-base64'
 
   const runtime = new Runtime()
 
-  let showJson = {}
-  let isReady = false
+  let input = ""
+  let output = ""
+  let failed = false
 
   onMount(() => {
-    const ready = () => {
-      if (!isReady) {
-        isReady = true
-        // 程序准备好了才显示，如果没有调用这个命令，页面上的组件不会被显示
-        runtime.app.ready()
-      }
-    }
-
-    // 获取配置信息
-    runtime.config.get().then(({ data, isReady }) => {
-      if (isReady) {
-        showJson = data
-        ready()
-      }
-    })
-    // 应用加载的时候可能还没有拉到最新的配置，也就是说上面的get不一定能拉到真正的配置，
-    // 所以需要监听配置更新事件，当xPBox拉取到配置信息的时候会下发通知。这个通知不仅是程
-    // 序拉取到最新的配置，也可能是当前App或者其他App修改了配置也会触发更新通知。
-    runtime.config.onUpdate(({ data }) => {
-      showJson = data
-      ready()
-    })
+    runtime.app.ready()
   })
 
-  const onSetExtraData = () => {
-    // 使用update只会更新提供的字段
-    runtime.config.update({ extra: 1 })
+  const encode = () => {
+    failed = false
+    output = Base64.encode(input)
   }
 
-  const onSetRandomData = () => {
-    // 使用replace会替换掉整个配置
-    runtime.config.replace({ random: Math.random() })
+  const decode = () => {
+    failed = false
+    try {
+      output = Base64.decode(input)
+    } catch (e) {
+      failed = true
+    }
   }
-
 
 </script>
 
 <div class="main">
-  <div class="title">
-    Hello xPBox
+  <div class="block">
+    <div class="title">编码前
+      {#if failed}
+        <span class="failed">编解码失败</span>
+      {/if}
+    </div>
+    <textarea class="input" bind:value={input} />
   </div>
-
-  <div class="json">
-    {JSON.stringify(showJson, undefined, 4)}
+  <div class="action">
+    <div class="btn" on:click={encode}>编码</div>
+    <div class="btn" on:click={decode}>解码</div>
+    <div class="name">Base64编码</div>
   </div>
-
-  <button class="btn" on:click={onSetRandomData}>
-    设置随机数据
-  </button>
-
-  <button class="btn" on:click={onSetExtraData}>
-    更新其他数据
-  </button>
+  <div class="block">
+    <div class="title">编码后</div>
+    <textarea class="input" bind:value={output} />
+  </div>
 </div>
 
 <style>
   .main {
     height: 100%;
     display: flex;
-    align-items: center;
-    justify-content: center;
     flex-direction: column;
     overflow: hidden;
+    background: #fff;
+    padding: 12px;
+    box-sizing: border-box;
   }
-
+  .block {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
   .title {
-    font-size: 26px;
-    font-weight: 500;
-    color: #333;
+    width: 100%;
+    line-height: 26px;
+    font-size: 12px;
+    color: #666;
+    user-select: none;
   }
+  .input {
+    background: #efefef85;
+    width: 100%;
+    flex: 1;
+    border: none;
+    outline: none;
+    resize: none;
+    border-radius: 8px;
+    padding: 12px;
+    transition: box-shadow 0.3s;
 
-  .json {
-    margin-top: 12px;
-    padding: 12px 24px;
-    border-radius: 12px;
-    background: #cccccc80;
-    word-break: break-word;
-    white-space: pre-line;
+    &:focus-within {
+      box-shadow: inset 0 0 3px #33333366;
+    }
   }
-
+  .action {
+    display: flex;
+    padding: 8px 0;
+    align-items: center;
+  }
+  .name {
+    color: #ccc;
+    text-align: right;
+    flex: 1;
+    font-size: 16px;
+    user-select: none;
+  }
   .btn {
-    margin-top: 12px;
+    padding: 4px 12px;
+    font-size: 14px;
+    border-radius: 4px;
+    margin-right: 8px;
+    background: #efefef85;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    user-select: none;
+
+    &:hover {
+      background: #efefef;
+    }
+  }
+  .failed {
+    color: red;
   }
 </style>
