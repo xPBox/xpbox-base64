@@ -2,6 +2,10 @@
 
 [xPBox星盒应用平台](https://www.xpbox.cn/)是一个消费级aPaaS平台，本项目是xPBox开源应用xPBox 常用编解码
 
+### 演示地址
+
+[https://www.xpbox.cn/tools/base64.html](https://www.xpbox.cn/tools/base64.html)
+
 ## 截图
 
 <img width="916" alt="image" src="https://github.com/xPBox/xpbox-base64/assets/76197009/158469eb-ec7d-4614-bfa3-58a36f0b87ad">
