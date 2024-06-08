@@ -2,12 +2,77 @@
   import { Runtime } from '@xpbox/sdk'
   import { onMount } from 'svelte'
   import { Base64 } from 'js-base64'
+  import { md5, sha256, sha512, sha1, sha224, sha384, sha3, hexEncode, hexDecode } from './hash'
+
 
   const runtime = new Runtime()
 
   let input = ""
   let output = ""
   let failed = false
+  let showList = false
+
+  const coderList = [
+    {
+      name: '编解码',
+      list: [
+        {
+          name: 'Base64编码',
+          encode: Base64.encode,
+          decode: Base64.decode
+        },
+        {
+          name: 'Hex (utf8)',
+          encode: hexEncode,
+          decode: hexDecode
+        },
+        {
+          name: 'URL编码',
+          encode: encodeURI,
+          decode: decodeURI
+        }
+      ]
+    },
+    {
+      name: '哈希 (Hash)',
+      list: [
+        {
+          name: 'MD5',
+          encode: md5,
+        },
+        {
+          name: 'SHA1',
+          encode: sha1,
+        },
+        {
+          name: 'SHA3',
+          encode: sha3,
+        },
+        {
+          name: 'SHA224',
+          encode: sha224,
+        },
+        {
+          name: 'SHA256',
+          encode: sha256,
+        },
+        {
+          name: 'SHA384',
+          encode: sha384,
+        },
+        {
+          name: 'SHA512',
+          encode: sha512,
+        }
+      ]
+    }
+  ]
+
+  let current : {
+    name: string,
+    encode: (input: string) => string,
+    decode?: (input: string) => string
+  } = coderList[0].list[0]
 
   onMount(() => {
     runtime.app.ready()
@@ -15,18 +80,22 @@
 
   const encode = () => {
     failed = false
-    output = Base64.encode(input)
+    output = current.encode(input)
   }
 
   const decode = () => {
     failed = false
     try {
-      output = Base64.decode(input)
+      output = current.decode?.(input) || ''
     } catch (e) {
       failed = true
     }
   }
 
+  const selectCoder = (coder) => {
+    current = coder
+    showList = false
+  }
 </script>
 
 <div class="main">
@@ -39,17 +108,36 @@
     <textarea class="input" bind:value={input} />
   </div>
   <div class="action">
-    <div class="btn" on:click={encode}>编码</div>
-    <div class="btn" on:click={decode}>解码</div>
-    <div class="name">Base64编码</div>
+    {#if !!current.encode}
+      <div class="btn" on:click={encode}>编码</div>
+    {/if}
+    {#if current.decode}
+      <div class="btn" on:click={decode}>解码</div>
+    {/if}
+    <div class="flex-1" />
+    <div class="name" on:click={() => showList = true}>{ current.name }<span class="arrow"></span></div>
   </div>
   <div class="block">
     <div class="title">编码后</div>
     <textarea class="input" bind:value={output} />
   </div>
+  <div class="mask" class:show={showList} on:click={() => showList = false}></div>
+  <div class="select" class:show={showList}>
+    {#each coderList as group}
+      <div class="group">
+        <div class="group-title">{group.name}</div>
+        {#each group.list as item}
+          <div class="group-item" on:click={() => selectCoder(item)}>{item.name}</div>
+        {/each}
+      </div>
+    {/each}
+  </div>
 </div>
 
-<style>
+<style lang="scss">
+  .flex-1 {
+    flex: 1;
+  }
   .main {
     height: 100%;
     display: flex;
@@ -75,15 +163,15 @@
     background: #efefef85;
     width: 100%;
     flex: 1;
-    border: none;
+    border: 1px solid transparent;
     outline: none;
     resize: none;
     border-radius: 8px;
     padding: 12px;
-    transition: box-shadow 0.3s;
+    transition: border 0.3s;
 
     &:focus-within {
-      box-shadow: inset 0 0 3px #33333366;
+      border: 1px solid #999;
     }
   }
   .action {
@@ -92,11 +180,22 @@
     align-items: center;
   }
   .name {
-    color: #ccc;
-    text-align: right;
-    flex: 1;
+    color: #666;
     font-size: 16px;
     user-select: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+
+    .arrow {
+      display: inline-block;
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 4px solid #666;
+      margin-left: 4px;
+    }
   }
   .btn {
     padding: 4px 12px;
@@ -116,4 +215,62 @@
   .failed {
     color: red;
   }
+
+  .mask{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    transition: backdrop-filter 0.3s;
+
+    &.show {
+      pointer-events: auto;
+      backdrop-filter: blur(4px);
+    }
+  }
+
+  .select {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 130px;
+    bottom: 0;
+    background: #f2f2f299;
+    padding: 8px;
+    transition: transform 0.3s;
+    transform: translateX(100%);
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    &.show {
+      transform: none;
+      box-shadow: 0 0 12px #ddd;
+    }
+    .group {
+      margin-bottom: 12px;
+    }
+    .group-title {
+      width: 100%;
+      line-height: 26px;
+      font-size: 12px;
+      color: #666;
+      user-select: none;
+      padding: 0 8px;
+    }
+    .group-item {
+      padding: 4px 8px;
+      font-size: 14px;
+      color: #333;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      border-radius: 4px;
+
+      &:hover {
+        background: #e3e3e3;
+      }
+    }
+  }
+
 </style>
